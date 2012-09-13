@@ -6,14 +6,32 @@ public class MapRegion
     private final int x1, x2, y1, y2;
     private MapRegion subRegion1, subRegion2, room;
 
-    public MapRegion(int x1, int x2, int y1, int y2)
+    /**
+     * BSP-puun solu, joka tietää omat mittansa, ala-solunsa sekä lehtisoluilla alueella sijaitsevan huoneen.
+     * Käytetään myös kuvaamaan huoneita.
+     * 
+     * @param x1 Alueen vasen X-koordinaatti
+     * @param x2 Alueen oikea X-koordinaatti
+     * @param y1 Alueen ylempi Y-koordinaatti
+     * @param y2 Alueen alempi Y-koordinaatti
+     */
+    public MapRegion(int x1, int x2, int y1, int y2) throws IllegalArgumentException
     {
+        if (x2 <= x1 || y2 <= y1)
+            throw new IllegalArgumentException();
+        
         this.x1 = x1;
         this.x2 = x2;
         this.y1 = y1;
         this.y2 = y2;
     }
     
+    /**
+     * Metodi jakaa alueen satunnaisesti kahteen uuteen alueeseen joko vaaka- tai pystysuunnassa. Satunnaisuutta
+     * ei esiinny, jos jako voidaan ylipäätänsä tehdä vain toisessa suunnassa ja jakoa ei suoriteta ollenkaan,
+     * jos muodostettavat ala-alueet olisivat liian pieniä(eli sinne ei mahtuisi järkevän kokoista huonetta).
+     * Jos alue on jo jaettu, kutsutaan operaatiota ala-alueille.
+     */
     public void divide()
     {
         // Jos tämä alue on jo jaettu, jaetaan ala-alueet
@@ -66,6 +84,10 @@ public class MapRegion
         }
     }
     
+    /**
+     * Metodi luo alueelle tai sen ala-alueille satunnaisen kokoisen huoneen, joka ei kuitenkaan ole isompi kuin alueensa ja
+     * mitoiltaan vähintään 60% alueensa mitoista(ominaisuus katosi vahingossa - tulossa takaisin pian).
+     */
     public void generateRoom()
     {
         if (subRegion1 != null) // Jos ei ole lehtisolu, mennään puussa alemmas
@@ -89,6 +111,10 @@ public class MapRegion
         room = new MapRegion(x1 + 1 + roomXOffset, x1 + roomXOffset + roomWidth, y1 + 1 + roomYOffset, y1 + roomYOffset + roomHeight);
     }
 
+    /**
+     * Lisää kaikki alueen ala-alueiden huoneet annettuun taulukkoon.
+     * @param dungeon Kaksiuloitteinen taulukko, johon huoneet piirretään
+     */
     public void addRoomToArray(String[][] dungeon)
     {
         if (subRegion1 != null)
@@ -97,13 +123,12 @@ public class MapRegion
             subRegion2.addRoomToArray(dungeon);
             return;
         }
+        
         int roomHeight = y2 - y1;
         int roomWidth = x2 - x1;
         for(int i = room.y1; i < room.y2; i++)
             for( int k = room.x1; k < room.x2; k++)
-            {
                 dungeon[k][i] = ".";
-            }
     }
     public int getX1()
     {

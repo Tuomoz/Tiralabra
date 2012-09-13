@@ -10,19 +10,21 @@ public class Main
     {
         MapRegion root = new MapRegion(1, 79, 1, 39);
         
+        // Täytetään luolasto aluksi pelkillä seinillä
         String[][] dungeon = new String[80][40];
         for(int a = 0; a < dungeon.length; a++)
             for(int b = 0; b < dungeon[0].length; b++)
                 dungeon[a][b] = "#";
         
+        // Jaetaan luolastoa osiin halutun monta kertaa
         int divisions = 0;
         while (divisions++ < 4)
             root.divide();
+        
         root.generateRoom();
         root.addRoomToArray(dungeon);
-        
-        
-        
+             
+        // Tulostetaan luolasto rivi kerrallaan
         for(int i=0; i < dungeon[0].length;i++)
         {
             for(int k=0; k < dungeon.length;k++)
