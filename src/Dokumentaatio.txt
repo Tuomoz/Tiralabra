@@ -1,0 +1,9 @@
+Tämän hetkinen ainoa toteutus noudattaa tämän tapaista luolaston generointitapaa:
+http://roguebasin.roguelikedevelopment.org/index.php/Basic_BSP_Dungeon_generation
+
+MapRegion vastaa siis yhtä puun solua sekä on itse samalla puu. Luokan testaaminen
+on tässä vaiheessa hankalaa, sillä se ei vielä sisällä kaikkea toiminnallisuutta
+joten ainoa testattava asia tässä vaiheessa olisi se, että huoneet ja alueet
+eivät voi mennä päällekkäin. Nämä asiat olisi kuitenkin helppo todistaa matemaattisesti,
+mutta tässä vaiheessa empiirisen testaus osoittaa, että huoneet eivät koskaan
+kosketa toisiaan. Jatkossa testaus tulee kuitenkin olemaan kattavampaa.
