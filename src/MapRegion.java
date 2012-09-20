@@ -1,10 +1,18 @@
 public class MapRegion
 {
-    public static final int REGION_MIN_SIZE = 8;
+    public static final int REGION_MIN_SIZE = 7;
     // Koska huone ei saa sijaita alueen reunoilla, täytyy sen olla vähintään 2 pituusyksikköä pienempi
-    public static final int ROOM_MIN_SIZE = REGION_MIN_SIZE - 2; 
+    public static final int ROOM_MIN_SIZE = REGION_MIN_SIZE - 2;
+    // Huoneen vähimmäiskoko alueseensa nähden prosentuaalisesti
+    public static final float ROOM_REGION_MIN_RATIO = 0.4f;
+    // Alueen jakopisteen vähimmäissuhde
+    public static final float REGION_DIV_MIN_RATIO = 0.4f;
+    public static final byte POS_UP = 1, POS_RIGHT = 2, POS_DOWN = 4, POS_LEFT = 8;
+    // Alueen/huoneen koordinaattipisteet
     private final int x1, x2, y1, y2;
     private MapRegion subRegion1, subRegion2, room;
+    // Jaetaanko alue pituus- vai leveyssuunnassa
+    private boolean horizontalDiv;
 
     /**
      * BSP-puun solu, joka tietää omat mittansa, ala-solunsa sekä lehtisoluilla alueella sijaitsevan huoneen.
@@ -24,6 +32,8 @@ public class MapRegion
         this.x2 = x2;
         this.y1 = y1;
         this.y2 = y2;
+        subRegion1 = null;
+        subRegion2 = null;
     }
     
     /**
@@ -46,7 +56,6 @@ public class MapRegion
         int regionWidth = x2 - x1;
         boolean canDivHor = regionHeight >= REGION_MIN_SIZE * 2;
         boolean canDivVer =  regionWidth >= REGION_MIN_SIZE * 2;
-        boolean horizontalDiv; // Jaetaanko alue pituus- vai leveyssuunnassa
         
         // Jos alue on liian pieni sekä korkeudeltaan että leveydeltään, ei sitä voi jakaa ollenkaan
         if (!canDivHor && !canDivVer)
@@ -67,6 +76,11 @@ public class MapRegion
             else
                 dividePoint = Main.rand.nextInt(regionHeight - REGION_MIN_SIZE * 2) + REGION_MIN_SIZE;
                 // Valitaan jakopiste satunnaisesti niin, että kumpikin ala-alue on vähintään REGION_MIN_SIZE:n kokoinen
+            
+            if ((dividePoint) / (float)regionHeight < REGION_DIV_MIN_RATIO)
+                dividePoint = (int)Math.round(Math.ceil(REGION_DIV_MIN_RATIO * regionHeight));
+            if ((regionHeight - dividePoint) / (float)regionHeight < REGION_DIV_MIN_RATIO)
+                dividePoint = (int)Math.round(Math.floor((1 - REGION_DIV_MIN_RATIO) * regionHeight));
 
             subRegion1 = new MapRegion(x1, x2, y1, y1 + dividePoint);
             subRegion2 = new MapRegion(x1, x2, dividePoint + y1, y2);
@@ -78,6 +92,11 @@ public class MapRegion
                 dividePoint = REGION_MIN_SIZE;
             else
                 dividePoint = Main.rand.nextInt(regionWidth - REGION_MIN_SIZE * 2) + REGION_MIN_SIZE;
+            
+            if ((dividePoint) / (float)regionWidth < REGION_DIV_MIN_RATIO)
+                dividePoint = (int)Math.round(Math.ceil(REGION_DIV_MIN_RATIO * regionWidth));
+            if ((regionWidth - dividePoint) / (float)regionHeight < REGION_DIV_MIN_RATIO)
+                dividePoint = (int)Math.round(Math.floor((1 - REGION_DIV_MIN_RATIO) * regionWidth));
 
             subRegion1 = new MapRegion(x1, dividePoint + x1, y1, y2);
             subRegion2 = new MapRegion(dividePoint + x1, x2, y1, y2);
@@ -86,11 +105,11 @@ public class MapRegion
     
     /**
      * Metodi luo alueelle tai sen ala-alueille satunnaisen kokoisen huoneen, joka ei kuitenkaan ole isompi kuin alueensa ja
-     * mitoiltaan vähintään 60% alueensa mitoista(ominaisuus katosi vahingossa - tulossa takaisin pian).
+     * mitoiltaan vähintään ROOM_REGION_MIN_RATIO:n verran alueensa mitoista.
      */
     public void generateRoom()
     {
-        if (subRegion1 != null) // Jos ei ole lehtisolu, mennään puussa alemmas
+        if (subRegion1 != null && subRegion2 != null) // Jos ei ole lehtisolu, mennään puussa alemmas
         {
             subRegion1.generateRoom();
             subRegion2.generateRoom();
@@ -103,12 +122,71 @@ public class MapRegion
         int roomWidth = (regionWidth == ROOM_MIN_SIZE) ? ROOM_MIN_SIZE : Main.rand.nextInt(regionWidth - ROOM_MIN_SIZE) + ROOM_MIN_SIZE;
         int roomHeight = (regionHeight == ROOM_MIN_SIZE) ? ROOM_MIN_SIZE : Main.rand.nextInt(regionHeight - ROOM_MIN_SIZE) + ROOM_MIN_SIZE;
         
+        // Varmistetaan, että tuleva huone ei ole liian pieni verrattuna alueeseen, jossa se sijaitsee
+        roomWidth = ((float)roomWidth / regionWidth >= ROOM_REGION_MIN_RATIO) ? roomWidth : Math.round(regionWidth * ROOM_REGION_MIN_RATIO);
+        roomHeight = ((float)roomHeight / regionHeight >= ROOM_REGION_MIN_RATIO) ? roomHeight : Math.round(regionHeight * ROOM_REGION_MIN_RATIO);
         
         // Jos huone ei ole niin iso, että täyttäisi koko alueen, voidaan siirtää huoneen sijaintia satunnaisesti alueen rajojen sisällä
         int roomXOffset = (roomWidth == regionWidth) ? 0 : Main.rand.nextInt(regionWidth - roomWidth);
         int roomYOffset = (roomHeight == regionHeight) ? 0 : Main.rand.nextInt(regionHeight - roomHeight);
         // Luodaan huone siten, että se ei ole koskaan alueen reunoilla(eli huoneiden välillä aina vähintään yksi seinä)
         room = new MapRegion(x1 + 1 + roomXOffset, x1 + roomXOffset + roomWidth, y1 + 1 + roomYOffset, y1 + roomYOffset + roomHeight);
+    }
+    
+    public void generateCorridors(String[][] dungeon)
+    {
+        MapRegion parent = this;
+        while(parent.subRegion1.subRegion1 != null)
+            parent = parent.subRegion1;
+        MapRegion sub1 = parent.subRegion1, sub2 = parent.subRegion2;
+        if (parent.getHorizontalDiv())
+            generateVerticalCorridor(sub1.getRoom(), sub2.getRoom(), dungeon);
+        else
+            generateHorizontalCorridor(sub1.getRoom(), sub2.getRoom(), dungeon);
+    }
+    
+    public void generateHorizontalCorridor(MapRegion room1, MapRegion room2, String[][] dungeon)
+    {
+        // Etäisyys lähekkäimpien seinien välillä
+        int distance = room2.getX1() - room1.getX2();
+        int startY = Main.rand.nextInt(room1.getY2() - room1.getY1() - 2) + room1.getY1() + 1;
+        int endY = Main.rand.nextInt(room2.getY2() - room2.getY1() - 2) + room2.getY1() + 1;
+        int x = room1.getX2(), y = startY;
+        
+        for(int i = 0; i < distance/2; i++)
+            dungeon[x++][y] = ".";
+        
+        if (startY < endY)
+            while (y != endY)
+                dungeon[x][y++] = ".";
+        else if (startY > endY)
+            while (y != endY)
+                dungeon[x][y--] = ".";
+        
+        while(x != room2.getX1())
+            dungeon[x++][y] = ".";
+    }
+    
+    public void generateVerticalCorridor(MapRegion room1, MapRegion room2, String[][] dungeon)
+    {
+        // Etäisyys lähekkäimpien seinien välillä
+        int distance = room2.getY1() - room1.getY2();
+        int startX = Main.rand.nextInt(room1.getX2() - room1.getX1() - 2) + room1.getX1() + 1;
+        int endX = Main.rand.nextInt(room2.getX2() - room2.getX1() - 2) + room2.getX1() + 1;
+        int x = startX, y = room1.getY2();
+        
+        for(int i = 0; i < distance/2; i++)
+            dungeon[x][y++] = ".";
+        
+        if (startX < endX)
+            while (x != endX)
+                dungeon[x++][y] = ".";
+        else if (startX > endX)
+            while (x != endX)
+                dungeon[x--][y] = ".";
+        
+        while(y != room2.getY1())
+            dungeon[x][y++] = ".";
     }
 
     /**
@@ -164,4 +242,8 @@ public class MapRegion
     {
         return room;
     }    
+    public boolean getHorizontalDiv()
+    {
+        return horizontalDiv;
+    }
 }

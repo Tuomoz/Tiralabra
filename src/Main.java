@@ -18,11 +18,12 @@ public class Main
         
         // Jaetaan luolastoa osiin halutun monta kertaa
         int divisions = 0;
-        while (divisions++ < 4)
+        while (divisions++ < 2)
             root.divide();
         
         root.generateRoom();
         root.addRoomToArray(dungeon);
+        root.generateCorridors(dungeon);
              
         // Tulostetaan luolasto rivi kerrallaan
         for(int i=0; i < dungeon[0].length;i++)
