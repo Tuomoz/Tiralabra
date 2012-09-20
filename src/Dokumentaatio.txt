@@ -1,9 +1,16 @@
 Tämän hetkinen ainoa toteutus noudattaa tämän tapaista luolaston generointitapaa:
 http://roguebasin.roguelikedevelopment.org/index.php/Basic_BSP_Dungeon_generation
 
-MapRegion vastaa siis yhtä puun solua sekä on itse samalla puu. Luokan testaaminen
-on tässä vaiheessa hankalaa, sillä se ei vielä sisällä kaikkea toiminnallisuutta
-joten ainoa testattava asia tässä vaiheessa olisi se, että huoneet ja alueet
-eivät voi mennä päällekkäin. Nämä asiat olisi kuitenkin helppo todistaa matemaattisesti,
-mutta tässä vaiheessa empiirisen testaus osoittaa, että huoneet eivät koskaan
-kosketa toisiaan. Jatkossa testaus tulee kuitenkin olemaan kattavampaa.
+MapRegion vastaa siis yhtä puun solua sekä on itse samalla puu. Toimintaperiaate
+on seuraavanlainen:
+
+1. Jaetaan puun juuri kahteen soluun joko pituus- tai leveyssuunnassa
+2. Jaetaan juuren vasempi solu
+3. Kun solua ei voida tai haluta enää jakaa, luodaan sen sisälle satunnainen huone
+4. Siirrytään kutsupinossa ylöspäin, ja jaetaan oikea solu
+5. Etsitään kummastakin solusta mahdollisimman lähekkäin olevat huoneet ja luodaan
+   niiden välille polku
+
+Toteutusta on testattu runsaasti erilaisilla parametreilla, eli algoritmin
+toimiminen oikein on todettu empiirisesti. Myöhemmin tarkoitus lisätä mukaan myös
+yksikkötestejä tai jotain vastaavaa.

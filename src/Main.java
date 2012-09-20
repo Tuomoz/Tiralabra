@@ -8,7 +8,7 @@ public class Main
     
     public static void main(String[] args) 
     {
-        MapRegion root = new MapRegion(1, 79, 1, 39);
+        MapRegion root = new MapRegion(0, 80, 0, 40);
         
         // Täytetään luolasto aluksi pelkillä seinillä
         String[][] dungeon = new String[80][40];
@@ -16,16 +16,7 @@ public class Main
             for(int b = 0; b < dungeon[0].length; b++)
                 dungeon[a][b] = "#";
         
-        // Jaetaan luolastoa osiin halutun monta kertaa
-//        int divisions = 0;
-//        while (divisions++ < 2)
-//            root.divide();
-        
-        root.generateDungeon(dungeon, 3);
-        
-        //root.generateRoom();
-        //root.addRoomToArray(dungeon);
-        //root.generateCorridors(dungeon);
+        root.generateDungeon(dungeon, 3); // Luodaan varsinainen luolasto
              
         // Tulostetaan luolasto rivi kerrallaan
         for(int i=0; i < dungeon[0].length;i++)

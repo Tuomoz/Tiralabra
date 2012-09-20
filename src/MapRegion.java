@@ -41,7 +41,7 @@ public class MapRegion
      * Metodi jakaa alueen satunnaisesti kahteen uuteen alueeseen joko vaaka- tai pystysuunnassa. Satunnaisuutta
      * ei esiinny, jos jako voidaan ylipäätänsä tehdä vain toisessa suunnassa ja jakoa ei suoriteta ollenkaan,
      * jos muodostettavat ala-alueet olisivat liian pieniä(eli sinne ei mahtuisi järkevän kokoista huonetta).
-     * Jos alue on jo jaettu, kutsutaan operaatiota ala-alueille.
+     * 
      * @return Onnistuiko jako vai ei
      */
     public boolean divide()
@@ -79,6 +79,14 @@ public class MapRegion
         return true;
     }
     
+    /**
+     * Laskee satunnaisen relatiivisen koordinaatin, jonka perusteella alue jaetaan. Laskussa varmistetaan, että
+     * kumpikaan tulevista ala-alueista ei ole pienempi kuin REGION_MIN_SIZE sekä alueet noudattavat
+     * REGION_DIV_MIN_RATIO:lla asetettua suhdetta.
+     * 
+     * @param widthOrLength Jaettavan alueen pituus tai leveys
+     * @return Relatiivinen jakopiste
+     */
     private int getDividePoint(int widthOrLength)
     {
         if (widthOrLength == REGION_MIN_SIZE * 2)
@@ -94,11 +102,22 @@ public class MapRegion
         return dividePoint;
     }
     
+    /**
+     * Varsinainen metodi, joka luo annettuun taulukkoon satunnaisen luolaston huoneineen ja polkuineen.
+     * @param dungeon Kaksiulotteinen taulukko, johon luolasto tallennetaan
+     * @param divisions Kuinka monta kertaa alue jaetaan
+     */
     public void generateDungeon(String[][] dungeon, int divisions)
     {
         generateDungeon(dungeon, this, divisions);
     }
     
+    /**
+     * Luolaston luomiseen käytettävä pseudorekursiivinen metodi.
+     * @param dungeon Luolaston taulukko
+     * @param region Käsiteltävä alue
+     * @param divisions Kuinka monta kertaa jaetaan
+     */
     private void generateDungeon(String[][] dungeon, MapRegion region, int divisions)
     {
         if (divisions > 0 && region.divide())
@@ -110,14 +129,14 @@ public class MapRegion
             {
                 room1 = getRoomWithPosition(Position.DOWNMOST, region.subRegion1);
                 room2 = getRoomWithPosition(Position.UPMOST, region.subRegion2);
+                generateVerticalCorridor(room1, room2, dungeon);
             }
             else
             {
                 room1 = getRoomWithPosition(Position.RIGHTMOST, region.subRegion1);
                 room2 = getRoomWithPosition(Position.LEFTMOST, region.subRegion2);
+                generateHorizontalCorridor(room1, room2, dungeon);
             }
-            generateCorridors(dungeon, room1, room2, region.horizontalDiv);
-            
         }
         else
         {
@@ -126,6 +145,16 @@ public class MapRegion
         }
     }
     
+    /**
+     * Hakee satunnaisesti puun lehdistä yhden huoneen, joka sijaitsee pyydetyssä paikassa. Metodi perustuu
+     * puun ominaisuuteen, jonka mukaan kunkin puun vasen solu on aina jaetun alueen vasen tai ylempi puolikas ja
+     * vastaavasti oikea solu oikea tai alempi puolikas. Tämä metodi mahdollistaa polun luomisen kahden puun välille
+     * siten, että polku kulkee mahdollisimman lähekkäin olevien huoneiden välillä.
+     * 
+     * @param position Sijainti, jossa huoneen on oltava
+     * @param region Alue, josta huone etsitään
+     * @return Sijaintia vastaava satunnainen huone
+     */
     private MapRegion getRoomWithPosition(Position position, MapRegion region)
     {
         if (region.room != null)
@@ -168,25 +197,26 @@ public class MapRegion
         room = new MapRegion(x1 + 1 + roomXOffset, x1 + roomXOffset + roomWidth, y1 + 1 + roomYOffset, y1 + roomYOffset + roomHeight);
     }
     
-    public void generateCorridors(String[][] dungeon, MapRegion room1 ,MapRegion room2, boolean horizontalDiv)
-    {
-        if (horizontalDiv)
-            generateVerticalCorridor(room1, room2, dungeon);
-        else
-            generateHorizontalCorridor(room1, room2, dungeon);
-    }
-    
+    /**
+     * Luo vaakasuuntaisen polun kahden huoneen välille vasemmalta oikealle.
+     * @param room1 Vasemmanpuoleinen huone
+     * @param room2 Oikeanpuoleinen huone
+     * @param dungeon Taulukko, johon polku tallennetaan
+     */
     public void generateHorizontalCorridor(MapRegion room1, MapRegion room2, String[][] dungeon)
     {
         // Etäisyys lähekkäimpien seinien välillä
         int distance = room2.getX1() - room1.getX2();
+        // Valitaan alku- ja loppukoordinaatit siten, että polku ei koskaan kulje huoneen kulmasta
         int startY = Main.rand.nextInt(room1.getY2() - room1.getY1() - 2) + room1.getY1() + 1;
         int endY = Main.rand.nextInt(room2.getY2() - room2.getY1() - 2) + room2.getY1() + 1;
         int x = room1.getX2(), y = startY;
         
+        // Kuljetaan ensin puoleen väliin vaakasuunnassa
         for(int i = 0; i < distance/2; i++)
             dungeon[x++][y] = ".";
         
+        // Jos tarvii, siirrytään pystysuunnassa endY:n määrittämään y-koordinaattiin
         if (startY < endY)
             while (y != endY)
                 dungeon[x][y++] = ".";
@@ -194,21 +224,31 @@ public class MapRegion
             while (y != endY)
                 dungeon[x][y--] = ".";
         
+        // Siirrytään loppuun asti vaakasuunnassa
         while(x != room2.getX1())
             dungeon[x++][y] = ".";
     }
     
+    /**
+     * Luo pystysuuntaisen polun kahden huoneen välille ylhäältä alas.
+     * @param room1 Ylempi huone
+     * @param room2 Alempi huone
+     * @param dungeon Taulukko, johon polku tallennetaan
+     */
     public void generateVerticalCorridor(MapRegion room1, MapRegion room2, String[][] dungeon)
     {
         // Etäisyys lähekkäimpien seinien välillä
         int distance = room2.getY1() - room1.getY2();
+        // Valitaan alku- ja loppukoordinaatit siten, että polku ei koskaan kulje huoneen kulmasta
         int startX = Main.rand.nextInt(room1.getX2() - room1.getX1() - 2) + room1.getX1() + 1;
         int endX = Main.rand.nextInt(room2.getX2() - room2.getX1() - 2) + room2.getX1() + 1;
         int x = startX, y = room1.getY2();
         
+        // Kuljetaan ensin pystysuunnassa puoleen väliin
         for(int i = 0; i < distance/2; i++)
             dungeon[x][y++] = ".";
         
+        // Jos tarvii, siirrytään vaakasuunnassa endX:n määrittämään x-koordinaattiin
         if (startX < endX)
             while (x != endX)
                 dungeon[x++][y] = ".";
@@ -216,6 +256,7 @@ public class MapRegion
             while (x != endX)
                 dungeon[x--][y] = ".";
         
+        // Siirrytään loppuun asti pystysuunnassa
         while(y != room2.getY1())
             dungeon[x][y++] = ".";
     }
