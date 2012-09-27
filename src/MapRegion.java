@@ -177,7 +177,7 @@ public class MapRegion
      * Metodi luo alueelle satunnaisen kokoisen huoneen, joka ei kuitenkaan ole isompi kuin alueensa ja
      * mitoiltaan vähintään ROOM_REGION_MIN_RATIO:n verran alueensa mitoista.
      */
-    public void generateRoom()
+    private void generateRoom()
     {
         int regionHeight = y2 - y1 - 2;
         int regionWidth = x2 - x1 - 2;
@@ -267,15 +267,6 @@ public class MapRegion
      */
     public void addRoomToArray(String[][] dungeon)
     {
-//        if (subRegion1 != null)
-//        {
-//            subRegion1.addRoomToArray(dungeon);
-//            subRegion2.addRoomToArray(dungeon);
-//            return;
-//        }
-//        
-        int roomHeight = y2 - y1;
-        int roomWidth = x2 - x1;
         for(int i = room.y1; i < room.y2; i++)
             for( int k = room.x1; k < room.x2; k++)
                 dungeon[k][i] = ".";
