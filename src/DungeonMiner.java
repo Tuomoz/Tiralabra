@@ -17,8 +17,11 @@ public class DungeonMiner
     
     public void generateDungeon()
     {
-        generateRoom(dungeon.length/2, dungeon[0].length/2, Direction.DOWN);
+        generatePath(dungeon.length/2, dungeon[0].length/2, Direction.DOWN);
         WallRange wall;
+//        walls.pop();
+//        wall = walls.pop();
+//        generatePath(wall.getRandomX(), wall.getRandomY(), wall.getDirection());
         while(!walls.empty())
         {
             System.out.println(walls.size());
@@ -46,9 +49,9 @@ public class DungeonMiner
             if (!isAreaEmpty(x1 - 1, x2 + 1, y1 - 1, y2))
                 return false;
             
-            walls.add(new WallRange(x1, x1, y1 + 1, y2 - 1, Direction.LEFT));
-            walls.add(new WallRange(x2, x2, y1 + 1, y2 - 1, Direction.RIGHT));
-            walls.add(new WallRange(x1 + 1, x2 - 1, y1, y1, Direction.UP));
+            walls.add(new WallRange(x1 - 1, x1 - 1, y1 + 1, y2 - 1, Direction.LEFT));
+            walls.add(new WallRange(x2 + 1, x2 + 1, y1 + 1, y2 - 1, Direction.RIGHT));
+            walls.add(new WallRange(x1 + 1, x2 - 1, y1 - 1, y1 - 1, Direction.UP));
         }
         else if (direction == Direction.DOWN)
         {
@@ -59,9 +62,9 @@ public class DungeonMiner
             if (!isAreaEmpty(x1 - 1, x2 - 1, y1, y2 + 1))
                 return false;
             
-            walls.add(new WallRange(x1, x1, y1 + 1, y2 - 1, Direction.LEFT));
-            walls.add(new WallRange(x2, x2, y1 + 1, y2 - 1, Direction.RIGHT));
-            walls.add(new WallRange(x1 + 1, x2 - 1, y2, y2, Direction.DOWN));
+            walls.add(new WallRange(x1 - 1, x1 - 1, y1 + 1, y2 - 1, Direction.LEFT));
+            walls.add(new WallRange(x2 + 1, x2 + 1, y1 + 1, y2 - 1, Direction.RIGHT));
+            walls.add(new WallRange(x1 + 1, x2 - 1, y2 + 1, y2 + 1, Direction.DOWN));
         }
         else if (direction == Direction.LEFT)
         {
@@ -72,9 +75,9 @@ public class DungeonMiner
             if (!isAreaEmpty(x1 - 1, x2, y1 - 1, y2 + 1))
                 return false;
             
-            walls.add(new WallRange(x1 + 1, x2 - 1, y1, y1, Direction.UP));
-            walls.add(new WallRange(x1 + 1, x2 - 1, y2, y2, Direction.DOWN));
-            walls.add(new WallRange(x1, x1, y1 + 1, y2 - 1, Direction.LEFT));
+            walls.add(new WallRange(x1 + 1, x2 - 1, y1 - 1, y1 - 1, Direction.UP));
+            walls.add(new WallRange(x1 + 1, x2 - 1, y2 + 1, y2 + 1, Direction.DOWN));
+            walls.add(new WallRange(x1 - 1, x1 - 1, y1 + 1, y2 - 1, Direction.LEFT));
         }
         else
         {
@@ -85,13 +88,13 @@ public class DungeonMiner
             if (!isAreaEmpty(x1, x2 + 1, y1 - 1, y2 + 1))
                 return false;
             
-            walls.add(new WallRange(x1 + 1, x2 - 1, y1, y1, Direction.UP));
-            walls.add(new WallRange(x1 + 1, x2 - 1, y2, y2, Direction.DOWN));
-            walls.add(new WallRange(x2, x2, y1 + 1, y2 - 1, Direction.LEFT));
+            walls.add(new WallRange(x1 + 1, x2 - 1, y1 - 1, y1 - 1, Direction.UP));
+            walls.add(new WallRange(x1 + 1, x2 - 1, y2 + 1, y2 + 1, Direction.DOWN));
+            walls.add(new WallRange(x2 - 1, x2 - 1, y1 + 1, y2 - 1, Direction.LEFT));
         }
         
-        for(int i = y1; i < y2; i++)
-            for( int k = x1; k < x2; k++)
+        for(int i = y1; i <= y2; i++)
+            for( int k = x1; k <= x2; k++)
                 dungeon[k][i] = ".";
         dungeon[x][y] = ".";
         

@@ -17,7 +17,7 @@ public class Main
             for(int b = 0; b < dungeon[0].length; b++)
                 dungeon[a][b] = "#";
         
-        //root.generateDungeon(dungeon, 6); // Luodaan varsinainen luolasto
+        //root.generateDungeon(dungeon, 5); // Luodaan varsinainen luolasto
         DungeonMiner miner = new DungeonMiner(dungeon);
         miner.generateDungeon();
         
