@@ -1,3 +1,7 @@
+package dungeonGenerators;
+
+import dungeonGenerators.MapRegion;
+import dungeonGenerators.DungeonMiner;
 import java.util.Random;
 import javax.swing.JFrame;
 
@@ -9,17 +13,19 @@ public class Main
     {
         int mapWidth = 200;
         int mapHeight = 100;
-        MapRegion root = new MapRegion(0, mapWidth, 0, mapHeight);
+        //MapRegion root = new MapRegion(0, mapWidth, 0, mapHeight);
         
         // Täytetään luolasto aluksi pelkillä seinillä
-        String[][] dungeon = new String[mapWidth][mapHeight];
+        char[][] dungeon = new char[mapWidth][mapHeight];
         for(int a = 0; a < dungeon.length; a++)
             for(int b = 0; b < dungeon[0].length; b++)
-                dungeon[a][b] = "#";
+                dungeon[a][b] = '#';
         
         //root.generateDungeon(dungeon, 6); // Luodaan varsinainen luolasto
         DungeonMiner miner = new DungeonMiner(dungeon);
-        miner.generateDungeon();
+        //miner.generateDungeon();
+        DungeonDivider divider = new DungeonDivider(dungeon);
+        divider.generateDungeon(6);
         
         JFrame frame = new JFrame();
         frame.add(new Gui(dungeon, 6));

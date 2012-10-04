@@ -1,4 +1,7 @@
+package dungeonGenerators;
 
+
+import java.awt.Color;
 import java.awt.Graphics;
 import javax.swing.JPanel;
 
@@ -10,10 +13,10 @@ import javax.swing.JPanel;
 
 public class Gui extends JPanel
 {
-    String[][] dungeon;
+    char[][] dungeon;
     int blockSize;
 
-    public Gui(String[][] dungeon, int blockSize)
+    public Gui(char[][] dungeon, int blockSize)
     {
         this.dungeon = dungeon;
         this.blockSize = blockSize;
@@ -27,8 +30,14 @@ public class Gui extends JPanel
         {
             for(int k=0; k < dungeon.length;k++)
             {
-                if (dungeon[k][i] == "#")
+                if (dungeon[k][i] == '#')
                     g.fillRect(k * blockSize, i * blockSize, blockSize, blockSize);
+                if (dungeon[k][i] == '*')
+                {
+                    //g.setColor(Color.red);
+                    g.drawRect(k * blockSize, i * blockSize, blockSize, blockSize);
+                    //g.setColor(Color.black);
+                }   
             }
         }
     }

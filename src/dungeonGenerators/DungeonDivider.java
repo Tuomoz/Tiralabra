@@ -1,4 +1,9 @@
-public class MapRegion
+package dungeonGenerators;
+
+import static dungeonGenerators.MapRegion.Position;
+
+import dungeonGenerators.MapRegion;
+public class DungeonDivider
 {
     public static final int REGION_MIN_SIZE = 7;
     // Koska huone ei saa sijaita alueen reunoilla, täytyy sen olla vähintään 2 pituusyksikköä pienempi
@@ -7,34 +12,15 @@ public class MapRegion
     public static final float ROOM_REGION_MIN_RATIO = 0.4f;
     // Alueen jakopisteen vähimmäissuhde
     public static final float REGION_DIV_MIN_RATIO = 0.4f;
-    // Alueen/huoneen koordinaattipisteet
-    private final int x1, x2, y1, y2;
-    private MapRegion subRegion1, subRegion2, room;
-    // Jaetaanko alue pituus- vai leveyssuunnassa
-    private boolean horizontalDiv;
     // Käytetään apuna polkujen luonnissa
-    private enum Position {UPMOST, RIGHTMOST, DOWNMOST, LEFTMOST}
+    
+    private char[][] dungeon;
+    private MapRegion root;
 
-    /**
-     * BSP-puun solu, joka tietää omat mittansa, ala-solunsa sekä lehtisoluilla alueella sijaitsevan huoneen.
-     * Käytetään myös kuvaamaan huoneita.
-     * 
-     * @param x1 Alueen vasen X-koordinaatti
-     * @param x2 Alueen oikea X-koordinaatti
-     * @param y1 Alueen ylempi Y-koordinaatti
-     * @param y2 Alueen alempi Y-koordinaatti
-     */
-    public MapRegion(int x1, int x2, int y1, int y2) throws IllegalArgumentException
+    public DungeonDivider(char[][] dungeon)
     {
-        if (x2 <= x1 || y2 <= y1)
-            throw new IllegalArgumentException();
-        
-        this.x1 = x1;
-        this.x2 = x2;
-        this.y1 = y1;
-        this.y2 = y2;
-        subRegion1 = null;
-        subRegion2 = null;
+        this.dungeon = dungeon;
+        root = new MapRegion(0, 50, 0, 50);
     }
     
     /**
@@ -44,13 +30,15 @@ public class MapRegion
      * 
      * @return Onnistuiko jako vai ei
      */
-    public boolean divide()
-    {        
-        int regionHeight = y2 - y1;
-        int regionWidth = x2 - x1;
+    public boolean divide(MapRegion region)
+    {
+        int regionHeight = region.getY2() - region.getY1();
+        int regionWidth = region.getX2() - region.getX1();
         // Millä tavalla alue voidaan jakaa?
         boolean canDivHor = regionHeight >= REGION_MIN_SIZE * 2;
         boolean canDivVer =  regionWidth >= REGION_MIN_SIZE * 2;
+        // Jaetaanko alue pituus- vai leveyssuunnassa
+        boolean horizontalDiv;
         
         // Jos alue on liian pieni sekä korkeudeltaan että leveydeltään, ei sitä voi jakaa ollenkaan
         if (!canDivHor && !canDivVer)
@@ -63,18 +51,19 @@ public class MapRegion
             horizontalDiv = Main.rand.nextBoolean(); // Jos alue on tarpeeksi iso, voidaan jakaa miten vaan
         
         int dividePoint; // Relatiivinen y- tai x-koordinaatti, jonka perusteella jaetaan alue
+        int x1 = region.getX1(), x2 = region.getX2(), y1 = region.getY1(), y2 = region.getY2();
         
         if (horizontalDiv)
         {
             dividePoint = getDividePoint(regionHeight);
-            subRegion1 = new MapRegion(x1, x2, y1, y1 + dividePoint);
-            subRegion2 = new MapRegion(x1, x2, dividePoint + y1, y2);
+            region.setSubRegion1( new MapRegion(x1, x2, y1, y1 + dividePoint, horizontalDiv));
+            region.setSubRegion2( new MapRegion(x1, x2, dividePoint + y1, y2, horizontalDiv));
         }
         else
         {
             dividePoint = getDividePoint(regionWidth);
-            subRegion1 = new MapRegion(x1, dividePoint + x1, y1, y2);
-            subRegion2 = new MapRegion(dividePoint + x1, x2, y1, y2);
+            region.setSubRegion1( new MapRegion(x1, dividePoint + x1, y1, y2, horizontalDiv));
+            region.setSubRegion2(new MapRegion(dividePoint + x1, x2, y1, y2, horizontalDiv));
         }
         return true;
     }
@@ -107,9 +96,9 @@ public class MapRegion
      * @param dungeon Kaksiulotteinen taulukko, johon luolasto tallennetaan
      * @param divisions Kuinka monta kertaa alue jaetaan
      */
-    public void generateDungeon(String[][] dungeon, int divisions)
+    public void generateDungeon(int divisions)
     {
-        generateDungeon(dungeon, this, divisions);
+        generateDungeon(root, divisions);
     }
     
     /**
@@ -118,30 +107,30 @@ public class MapRegion
      * @param region Käsiteltävä alue
      * @param divisions Kuinka monta kertaa jaetaan
      */
-    private void generateDungeon(String[][] dungeon, MapRegion region, int divisions)
+    private void generateDungeon(MapRegion region, int divisions)
     {
-        if (divisions > 0 && region.divide())
+        if (divisions > 0 && divide(region))
         {
-            generateDungeon(dungeon, region.subRegion1, divisions - 1);
-            generateDungeon(dungeon, region.subRegion2, divisions - 1);
+            generateDungeon(region.getSubRegion1(), divisions - 1);
+            generateDungeon(region.getSubRegion2(), divisions - 1);
             MapRegion room1, room2;
-            if (region.horizontalDiv)
+            if (region.getHorizontalDiv())
             {
-                room1 = getRoomWithPosition(Position.DOWNMOST, region.subRegion1);
-                room2 = getRoomWithPosition(Position.UPMOST, region.subRegion2);
-                generateVerticalCorridor(room1, room2, dungeon);
+                room1 = getRoomWithPosition(Position.DOWNMOST, region.getSubRegion1());
+                room2 = getRoomWithPosition(Position.UPMOST, region.getSubRegion2());
+                generateVerticalCorridor(room1, room2);
             }
             else
             {
-                room1 = getRoomWithPosition(Position.RIGHTMOST, region.subRegion1);
-                room2 = getRoomWithPosition(Position.LEFTMOST, region.subRegion2);
-                generateHorizontalCorridor(room1, room2, dungeon);
+                room1 = getRoomWithPosition(Position.RIGHTMOST, region.getSubRegion1());
+                room2 = getRoomWithPosition(Position.LEFTMOST, region.getSubRegion2());
+                generateHorizontalCorridor(room1, room2);
             }
         }
         else
         {
-            region.generateRoom();
-            region.addRoomToArray(dungeon);
+            generateRoom(region);
+            addRoomToArray(region.getRoom());
         }
     }
     
@@ -157,30 +146,30 @@ public class MapRegion
      */
     private MapRegion getRoomWithPosition(Position position, MapRegion region)
     {
-        if (region.room != null)
-            return region.room;
-        if (((position == Position.LEFTMOST || position == Position.RIGHTMOST) && region.horizontalDiv)  ||
-            ((position == Position.UPMOST || position == Position.DOWNMOST)) && !region.horizontalDiv)
+        if (region.getRoom() != null)
+            return region.getRoom();
+        if (((position == Position.LEFTMOST || position == Position.RIGHTMOST) && region.getHorizontalDiv())  ||
+            ((position == Position.UPMOST || position == Position.DOWNMOST)) && !region.getHorizontalDiv())
         {
             if(Main.rand.nextBoolean())
-                return getRoomWithPosition(position, region.subRegion1);
+                return getRoomWithPosition(position, region.getSubRegion1());
             else
-                return getRoomWithPosition(position, region.subRegion2);
+                return getRoomWithPosition(position, region.getSubRegion2());
         }
         if (position == Position.LEFTMOST || position == Position.UPMOST)
-            return getRoomWithPosition(position, region.subRegion1);
+            return getRoomWithPosition(position, region.getSubRegion1());
         else
-            return getRoomWithPosition(position, region.subRegion2);
+            return getRoomWithPosition(position, region.getSubRegion2());
     }
     
     /**
      * Metodi luo alueelle satunnaisen kokoisen huoneen, joka ei kuitenkaan ole isompi kuin alueensa ja
      * mitoiltaan vähintään ROOM_REGION_MIN_RATIO:n verran alueensa mitoista.
      */
-    private void generateRoom()
+    private void generateRoom(MapRegion region)
     {
-        int regionHeight = y2 - y1 - 2;
-        int regionWidth = x2 - x1 - 2;
+        int regionHeight = region.getY2() - region.getY1() - 2;
+        int regionWidth = region.getX2() - region.getX1() - 2;
         
         // Muodostetaan huoneen mitat siten, että mitat ovat vähintään ROOM_MIN_SIZE tai satunnaisesti niin isot kuin mahtuu
         int roomWidth = (regionWidth == ROOM_MIN_SIZE) ? ROOM_MIN_SIZE : Main.rand.nextInt(regionWidth - ROOM_MIN_SIZE) + ROOM_MIN_SIZE;
@@ -194,7 +183,8 @@ public class MapRegion
         int roomXOffset = (roomWidth == regionWidth) ? 0 : Main.rand.nextInt(regionWidth - roomWidth);
         int roomYOffset = (roomHeight == regionHeight) ? 0 : Main.rand.nextInt(regionHeight - roomHeight);
         // Luodaan huone siten, että se ei ole koskaan alueen reunoilla(eli huoneiden välillä aina vähintään yksi seinä)
-        room = new MapRegion(x1 + 1 + roomXOffset, x1 + roomXOffset + roomWidth, y1 + 1 + roomYOffset, y1 + roomYOffset + roomHeight);
+        region.setRoom( new MapRegion(region.getX1() + 1 + roomXOffset, region.getX1() + roomXOffset + roomWidth, 
+                                      region.getY1() + 1 + roomYOffset, region.getY1() + roomYOffset + roomHeight));
     }
     
     /**
@@ -203,7 +193,7 @@ public class MapRegion
      * @param room2 Oikeanpuoleinen huone
      * @param dungeon Taulukko, johon polku tallennetaan
      */
-    public void generateHorizontalCorridor(MapRegion room1, MapRegion room2, String[][] dungeon)
+    public void generateHorizontalCorridor(MapRegion room1, MapRegion room2)
     {
         // Etäisyys lähekkäimpien seinien välillä
         int distance = room2.getX1() - room1.getX2();
@@ -214,19 +204,19 @@ public class MapRegion
         
         // Kuljetaan ensin puoleen väliin vaakasuunnassa
         for(int i = 0; i < distance/2; i++)
-            dungeon[x++][y] = ".";
+            dungeon[x++][y] = '.';
         
         // Jos tarvii, siirrytään pystysuunnassa endY:n määrittämään y-koordinaattiin
         if (startY < endY)
             while (y != endY)
-                dungeon[x][y++] = ".";
+                dungeon[x][y++] = '.';
         else if (startY > endY)
             while (y != endY)
-                dungeon[x][y--] = ".";
+                dungeon[x][y--] = '.';
         
         // Siirrytään loppuun asti vaakasuunnassa
         while(x != room2.getX1())
-            dungeon[x++][y] = ".";
+            dungeon[x++][y] = '.';
     }
     
     /**
@@ -235,7 +225,7 @@ public class MapRegion
      * @param room2 Alempi huone
      * @param dungeon Taulukko, johon polku tallennetaan
      */
-    public void generateVerticalCorridor(MapRegion room1, MapRegion room2, String[][] dungeon)
+    public void generateVerticalCorridor(MapRegion room1, MapRegion room2)
     {
         // Etäisyys lähekkäimpien seinien välillä
         int distance = room2.getY1() - room1.getY2();
@@ -246,67 +236,29 @@ public class MapRegion
         
         // Kuljetaan ensin pystysuunnassa puoleen väliin
         for(int i = 0; i < distance/2; i++)
-            dungeon[x][y++] = ".";
+            dungeon[x][y++] = '.';
         
         // Jos tarvii, siirrytään vaakasuunnassa endX:n määrittämään x-koordinaattiin
         if (startX < endX)
             while (x != endX)
-                dungeon[x++][y] = ".";
+                dungeon[x++][y] = '.';
         else if (startX > endX)
             while (x != endX)
-                dungeon[x--][y] = ".";
+                dungeon[x--][y] = '.';
         
         // Siirrytään loppuun asti pystysuunnassa
         while(y != room2.getY1())
-            dungeon[x][y++] = ".";
+            dungeon[x][y++] = '.';
     }
 
     /**
      * Lisää kaikki alueen ala-alueiden huoneet annettuun taulukkoon.
      * @param dungeon Kaksiuloitteinen taulukko, johon huoneet piirretään
      */
-    public void addRoomToArray(String[][] dungeon)
+    public void addRoomToArray(MapRegion room)
     {
-        for(int i = room.y1; i < room.y2; i++)
-            for( int k = room.x1; k < room.x2; k++)
-                dungeon[k][i] = ".";
-    }
-    public int getX1()
-    {
-        return x1;
-    }
-
-    public int getX2()
-    {
-        return x2;
-    }
-
-    public int getY1()
-    {
-        return y1;
-    }
-
-    public int getY2()
-    {
-        return y2;
-    }
-
-    public MapRegion getSubRegion1()
-    {
-        return subRegion1;
-    }
-
-    public MapRegion getSubRegion2()
-    {
-        return subRegion2;
-    }
-
-    public MapRegion getRoom()
-    {
-        return room;
-    }    
-    public boolean getHorizontalDiv()
-    {
-        return horizontalDiv;
+        for(int i = room.getY1(); i < room.getY2(); i++)
+            for( int k = room.getX1(); k < room.getX2(); k++)
+                dungeon[k][i] = '.';
     }
 }
