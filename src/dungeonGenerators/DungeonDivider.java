@@ -20,7 +20,7 @@ public class DungeonDivider
     public DungeonDivider(char[][] dungeon)
     {
         this.dungeon = dungeon;
-        root = new MapRegion(0, 50, 0, 50);
+        root = new MapRegion(0, dungeon.length, 0, dungeon[0].length);
     }
     
     /**
@@ -65,6 +65,7 @@ public class DungeonDivider
             region.setSubRegion1( new MapRegion(x1, dividePoint + x1, y1, y2, horizontalDiv));
             region.setSubRegion2(new MapRegion(dividePoint + x1, x2, y1, y2, horizontalDiv));
         }
+        region.setHorizontalDiv(horizontalDiv);
         return true;
     }
     
@@ -118,7 +119,7 @@ public class DungeonDivider
             {
                 room1 = getRoomWithPosition(Position.DOWNMOST, region.getSubRegion1());
                 room2 = getRoomWithPosition(Position.UPMOST, region.getSubRegion2());
-                generateVerticalCorridor(room1, room2);
+                //generateVerticalCorridor(room1, room2);
             }
             else
             {

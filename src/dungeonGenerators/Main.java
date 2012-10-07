@@ -21,11 +21,18 @@ public class Main
             for(int b = 0; b < dungeon[0].length; b++)
                 dungeon[a][b] = '#';
         
-        //root.generateDungeon(dungeon, 6); // Luodaan varsinainen luolasto
-        DungeonMiner miner = new DungeonMiner(dungeon);
-        //miner.generateDungeon();
         DungeonDivider divider = new DungeonDivider(dungeon);
-        divider.generateDungeon(6);
+        DungeonMiner miner = new DungeonMiner(dungeon);
+        
+        long alkuAika, loppuAika, kulutettuAika;
+        alkuAika = System.currentTimeMillis();
+        
+        miner.generateDungeon();
+        //divider.generateDungeon(6);
+        
+        loppuAika = System.currentTimeMillis();
+        kulutettuAika = loppuAika - alkuAika;
+        System.out.println("Time to build dungeon: " + kulutettuAika + " ms");
         
         JFrame frame = new JFrame();
         frame.add(new Gui(dungeon, 6));
