@@ -27,8 +27,8 @@ public class Main
         long alkuAika, loppuAika, kulutettuAika;
         alkuAika = System.currentTimeMillis();
         
-        miner.generateDungeon();
-        //divider.generateDungeon(6);
+        //miner.generateDungeon();
+        divider.generateDungeon(5);
         
         loppuAika = System.currentTimeMillis();
         kulutettuAika = loppuAika - alkuAika;

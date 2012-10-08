@@ -11,7 +11,7 @@ public class DungeonDivider
     // Huoneen vähimmäiskoko alueseensa nähden prosentuaalisesti
     public static final float ROOM_REGION_MIN_RATIO = 0.4f;
     // Alueen jakopisteen vähimmäissuhde
-    public static final float REGION_DIV_MIN_RATIO = 0.4f;
+    public static final float REGION_DIV_MIN_RATIO = 0.5f;
     // Käytetään apuna polkujen luonnissa
     
     private char[][] dungeon;
@@ -119,7 +119,7 @@ public class DungeonDivider
             {
                 room1 = getRoomWithPosition(Position.DOWNMOST, region.getSubRegion1());
                 room2 = getRoomWithPosition(Position.UPMOST, region.getSubRegion2());
-                //generateVerticalCorridor(room1, room2);
+                generateVerticalCorridor(room1, room2);
             }
             else
             {
