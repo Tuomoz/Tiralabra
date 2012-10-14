@@ -1,12 +1,17 @@
 package dungeonGenerators;
 
-
-import dungeonGenerators.WallRange;
-
+/**
+ * Pino, johon voidaan lisätä wallRange-olioita.
+ * @author Tuomo Kärkkäinen
+ */
 public class WallStack
 {
     private StackNode top = null;
     
+    /**
+     * Lisää uuden wallRange-olion pinoon.
+     * @param wallRange Lisättävä olio
+     */
     public void add(WallRange wallRange)
     {
         StackNode newNode = new StackNode(wallRange);
@@ -14,6 +19,10 @@ public class WallStack
         top = newNode;
     }
     
+    /**
+     * Poistaa ja palauttaa ylimmän wallRange-olion pinosta.
+     * @return Ylin olio
+     */
     public WallRange pop()
     {
         if (top == null)
@@ -24,11 +33,15 @@ public class WallStack
         return temp.wallRange;
     }
     
+    /**
+     * Onko pino tyhjä
+     */
     public boolean empty()
     {
         return top == null;
     }
     
+    // Edustaa yhtä alkiota pinossa
     private class StackNode
     {
         private StackNode next;

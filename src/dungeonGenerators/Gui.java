@@ -1,21 +1,22 @@
 package dungeonGenerators;
 
-
-import java.awt.Color;
 import java.awt.Graphics;
 import javax.swing.JPanel;
 
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+/**
+ * JPanel, johon piirretään luolasto.
+ * @author Tuomo Kärkkäinen
  */
-
-
 public class Gui extends JPanel
 {
     char[][] dungeon;
     int blockSize;
 
+    /**
+     * Konstruktori JPanelille, joka piirtää luolaston näyviin.
+     * @param dungeon Luolaston esitys taulukkona
+     * @param blockSize Yhden luolaston pisteen koko pikseleissä
+     */
     public Gui(char[][] dungeon, int blockSize)
     {
         this.dungeon = dungeon;

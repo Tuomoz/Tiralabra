@@ -1,19 +1,21 @@
 package dungeonGenerators;
 
-import dungeonGenerators.MapRegion;
-import dungeonGenerators.DungeonMiner;
 import java.util.Random;
 import javax.swing.JFrame;
 
-public class Main 
+/**
+ * Pääluokka, jolla algoritmeja testataan. Sisältää käytännössä harjoitustyön ulkopuolista
+ * tavaraa, jota ilmankin algoritmit toimisivat.
+ * @author Tuomo Kärkkäinen
+ */
+public class Tiralabra 
 {
     public static Random rand = new Random();
     
     public static void main(String[] args) 
     {
-        int mapWidth = 200;
-        int mapHeight = 100;
-        //MapRegion root = new MapRegion(0, mapWidth, 0, mapHeight);
+        int mapWidth = Integer.parseInt(args[0]);
+        int mapHeight = Integer.parseInt(args[1]);
         
         // Täytetään luolasto aluksi pelkillä seinillä
         char[][] dungeon = new char[mapWidth][mapHeight];
@@ -27,17 +29,21 @@ public class Main
         long alkuAika, loppuAika, kulutettuAika;
         alkuAika = System.currentTimeMillis();
         
-        //miner.generateDungeon();
-        divider.generateDungeon(5);
+        if (Integer.parseInt(args[2]) == 1)
+            divider.generateDungeon(Integer.parseInt(args[3]));
+        else
+            miner.generateDungeon();
+        
         
         loppuAika = System.currentTimeMillis();
         kulutettuAika = loppuAika - alkuAika;
         System.out.println("Time to build dungeon: " + kulutettuAika + " ms");
         
+        // Näytetään graafinen esitys luodusta luolastosta
         JFrame frame = new JFrame();
-        frame.add(new Gui(dungeon, 6));
+        frame.add(new Gui(dungeon, 4));
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(mapWidth * 6, mapHeight * 6 + 20);
+        frame.setSize(mapWidth * 4, mapHeight * 4 + 20);
         frame.setLocationRelativeTo(null);
         frame.setResizable(false);
         frame.setVisible(true);

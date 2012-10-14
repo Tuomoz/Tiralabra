@@ -1,8 +1,9 @@
 package dungeonGenerators;
 
-import static dungeonGenerators.MapRegion.Position;
-
-import dungeonGenerators.MapRegion;
+/**
+ * Luokka Dungeon dividerille, jonka toiminnallisuus on esitelty dokumentaatiossa.
+ * @author Tuomo Kärkkäinen
+ */
 public class DungeonDivider
 {
     public static final int REGION_MIN_SIZE = 7;
@@ -13,13 +14,18 @@ public class DungeonDivider
     // Alueen jakopisteen vähimmäissuhde
     public static final float REGION_DIV_MIN_RATIO = 0.5f;
     // Käytetään apuna polkujen luonnissa
-    
+    public static enum Position {UPMOST, RIGHTMOST, DOWNMOST, LEFTMOST}
     private char[][] dungeon;
     private MapRegion root;
 
+    /**
+     * Kostruktori luokalle.
+     * @param dungeon Taulukko, johon luolasto generoidaan
+     */
     public DungeonDivider(char[][] dungeon)
     {
         this.dungeon = dungeon;
+        // Juurisolu kattaa koko talukon koon
         root = new MapRegion(0, dungeon.length, 0, dungeon[0].length);
     }
     
@@ -48,7 +54,7 @@ public class DungeonDivider
         else if (!canDivVer)
             horizontalDiv = true;
         else
-            horizontalDiv = Main.rand.nextBoolean(); // Jos alue on tarpeeksi iso, voidaan jakaa miten vaan
+            horizontalDiv = Tiralabra.rand.nextBoolean(); // Jos alue on tarpeeksi iso, voidaan jakaa miten vaan
         
         int dividePoint; // Relatiivinen y- tai x-koordinaatti, jonka perusteella jaetaan alue
         int x1 = region.getX1(), x2 = region.getX2(), y1 = region.getY1(), y2 = region.getY2();
@@ -82,7 +88,7 @@ public class DungeonDivider
         if (widthOrLength == REGION_MIN_SIZE * 2)
             return REGION_MIN_SIZE;
         
-        int dividePoint = Main.rand.nextInt(widthOrLength - REGION_MIN_SIZE * 2) + REGION_MIN_SIZE;
+        int dividePoint = Tiralabra.rand.nextInt(widthOrLength - REGION_MIN_SIZE * 2) + REGION_MIN_SIZE;
         // Valitaan jakopiste satunnaisesti niin, että kumpikin ala-alue on vähintään REGION_MIN_SIZE:n kokoinen
         if ((dividePoint) / (float)widthOrLength < REGION_DIV_MIN_RATIO)
             dividePoint = (int)Math.round(Math.ceil(REGION_DIV_MIN_RATIO * widthOrLength));
@@ -152,7 +158,7 @@ public class DungeonDivider
         if (((position == Position.LEFTMOST || position == Position.RIGHTMOST) && region.getHorizontalDiv())  ||
             ((position == Position.UPMOST || position == Position.DOWNMOST)) && !region.getHorizontalDiv())
         {
-            if(Main.rand.nextBoolean())
+            if(Tiralabra.rand.nextBoolean())
                 return getRoomWithPosition(position, region.getSubRegion1());
             else
                 return getRoomWithPosition(position, region.getSubRegion2());
@@ -173,16 +179,16 @@ public class DungeonDivider
         int regionWidth = region.getX2() - region.getX1() - 2;
         
         // Muodostetaan huoneen mitat siten, että mitat ovat vähintään ROOM_MIN_SIZE tai satunnaisesti niin isot kuin mahtuu
-        int roomWidth = (regionWidth == ROOM_MIN_SIZE) ? ROOM_MIN_SIZE : Main.rand.nextInt(regionWidth - ROOM_MIN_SIZE) + ROOM_MIN_SIZE;
-        int roomHeight = (regionHeight == ROOM_MIN_SIZE) ? ROOM_MIN_SIZE : Main.rand.nextInt(regionHeight - ROOM_MIN_SIZE) + ROOM_MIN_SIZE;
+        int roomWidth = (regionWidth == ROOM_MIN_SIZE) ? ROOM_MIN_SIZE : Tiralabra.rand.nextInt(regionWidth - ROOM_MIN_SIZE) + ROOM_MIN_SIZE;
+        int roomHeight = (regionHeight == ROOM_MIN_SIZE) ? ROOM_MIN_SIZE : Tiralabra.rand.nextInt(regionHeight - ROOM_MIN_SIZE) + ROOM_MIN_SIZE;
         
         // Varmistetaan, että tuleva huone ei ole liian pieni verrattuna alueeseen, jossa se sijaitsee
         roomWidth = ((float)roomWidth / regionWidth >= ROOM_REGION_MIN_RATIO) ? roomWidth : Math.round(regionWidth * ROOM_REGION_MIN_RATIO);
         roomHeight = ((float)roomHeight / regionHeight >= ROOM_REGION_MIN_RATIO) ? roomHeight : Math.round(regionHeight * ROOM_REGION_MIN_RATIO);
         
         // Jos huone ei ole niin iso, että täyttäisi koko alueen, voidaan siirtää huoneen sijaintia satunnaisesti alueen rajojen sisällä
-        int roomXOffset = (roomWidth == regionWidth) ? 0 : Main.rand.nextInt(regionWidth - roomWidth);
-        int roomYOffset = (roomHeight == regionHeight) ? 0 : Main.rand.nextInt(regionHeight - roomHeight);
+        int roomXOffset = (roomWidth == regionWidth) ? 0 : Tiralabra.rand.nextInt(regionWidth - roomWidth);
+        int roomYOffset = (roomHeight == regionHeight) ? 0 : Tiralabra.rand.nextInt(regionHeight - roomHeight);
         // Luodaan huone siten, että se ei ole koskaan alueen reunoilla(eli huoneiden välillä aina vähintään yksi seinä)
         region.setRoom( new MapRegion(region.getX1() + 1 + roomXOffset, region.getX1() + roomXOffset + roomWidth, 
                                       region.getY1() + 1 + roomYOffset, region.getY1() + roomYOffset + roomHeight));
@@ -192,15 +198,14 @@ public class DungeonDivider
      * Luo vaakasuuntaisen polun kahden huoneen välille vasemmalta oikealle.
      * @param room1 Vasemmanpuoleinen huone
      * @param room2 Oikeanpuoleinen huone
-     * @param dungeon Taulukko, johon polku tallennetaan
      */
     public void generateHorizontalCorridor(MapRegion room1, MapRegion room2)
     {
         // Etäisyys lähekkäimpien seinien välillä
         int distance = room2.getX1() - room1.getX2();
         // Valitaan alku- ja loppukoordinaatit siten, että polku ei koskaan kulje huoneen kulmasta
-        int startY = Main.rand.nextInt(room1.getY2() - room1.getY1() - 2) + room1.getY1() + 1;
-        int endY = Main.rand.nextInt(room2.getY2() - room2.getY1() - 2) + room2.getY1() + 1;
+        int startY = Tiralabra.rand.nextInt(room1.getY2() - room1.getY1() - 2) + room1.getY1() + 1;
+        int endY = Tiralabra.rand.nextInt(room2.getY2() - room2.getY1() - 2) + room2.getY1() + 1;
         int x = room1.getX2(), y = startY;
         
         // Kuljetaan ensin puoleen väliin vaakasuunnassa
@@ -216,7 +221,7 @@ public class DungeonDivider
                 dungeon[x][y--] = '.';
         
         // Siirrytään loppuun asti vaakasuunnassa
-        while(x != room2.getX1())
+        while(x <= room2.getX1())
             dungeon[x++][y] = '.';
     }
     
@@ -224,15 +229,14 @@ public class DungeonDivider
      * Luo pystysuuntaisen polun kahden huoneen välille ylhäältä alas.
      * @param room1 Ylempi huone
      * @param room2 Alempi huone
-     * @param dungeon Taulukko, johon polku tallennetaan
      */
     public void generateVerticalCorridor(MapRegion room1, MapRegion room2)
     {
         // Etäisyys lähekkäimpien seinien välillä
         int distance = room2.getY1() - room1.getY2();
         // Valitaan alku- ja loppukoordinaatit siten, että polku ei koskaan kulje huoneen kulmasta
-        int startX = Main.rand.nextInt(room1.getX2() - room1.getX1() - 2) + room1.getX1() + 1;
-        int endX = Main.rand.nextInt(room2.getX2() - room2.getX1() - 2) + room2.getX1() + 1;
+        int startX = Tiralabra.rand.nextInt(room1.getX2() - room1.getX1() - 2) + room1.getX1() + 1;
+        int endX = Tiralabra.rand.nextInt(room2.getX2() - room2.getX1() - 2) + room2.getX1() + 1;
         int x = startX, y = room1.getY2();
         
         // Kuljetaan ensin pystysuunnassa puoleen väliin
@@ -248,16 +252,17 @@ public class DungeonDivider
                 dungeon[x--][y] = '.';
         
         // Siirrytään loppuun asti pystysuunnassa
-        while(y != room2.getY1())
+        while(y <= room2.getY1())
             dungeon[x][y++] = '.';
     }
 
     /**
-     * Lisää kaikki alueen ala-alueiden huoneet annettuun taulukkoon.
-     * @param dungeon Kaksiuloitteinen taulukko, johon huoneet piirretään
+     * Lisää annetun huoneen talukkoon
+     * @param room Taulukkoon lisättävä huone
      */
     public void addRoomToArray(MapRegion room)
     {
+        // Täytetään taulukkoa rivi kerrallaan
         for(int i = room.getY1(); i < room.getY2(); i++)
             for( int k = room.getX1(); k < room.getX2(); k++)
                 dungeon[k][i] = '.';
